@@ -1,9 +1,23 @@
 name: Remote Dispatch Action Initiator
  
 on:
-  push:
-   branches: 
-    - 'preview'
+  # Dispatch or Manual triggers
+  workflow_dispatch:
+
+#  push:
+#    branches:
+#      - master
+#      # - develop
+#    paths:
+#      - '**'
+#      - '!**.md'
+#      - '!.github/**'
+#      - '.github/scripts/**'
+#      - '.github/workflows/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
  
 jobs:
   trigger_preview_build:
@@ -15,16 +29,18 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v4
+        uses: gradle/actions/wrapper-validation@d156388eb19639ec20ade50009f3d199ce1e2808
 
       - name: Create Tag
         run: |
           git tag "preview-${{ github.run_number }}"
           git push origin "preview-${{ github.run_number }}"
 
-      - name: PING - Dispatch initiating repository event
-        run: |
-          curl -X POST https://api.github.com/repos/bigbabyboost/MewtachiPreview/dispatches \
-          -H 'Accept: application/vnd.github.everest-preview+json' \
-          -u ${{ secrets.ACCESS_TOKEN }} \
-          --data '{"event_type": "ping", "client_payload": { "repository": "'"$GITHUB_REPOSITORY"'" }}'
+      - name: Invoke workflow in preview repo
+        uses: benc-uk/workflow-dispatch@e2e5e9a103e331dad343f381a29e654aea3cf8fc # v1.2.4
+        with:
+          workflow: BuildPreview.yml
+          repo: bigbabyboost/mewtachi-preview
+          ref: "refs/heads/master"
+          token: "${{ secrets.BOT_PAT }}"
+          inputs: '{ "git-ref": "${{ steps.branch_names.outputs.current_branch }}" }'
