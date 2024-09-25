@@ -390,7 +390,7 @@
 
                 <data
                     android:host="mangadex-auth"
-                    android:scheme="tachiyomisy" />
+                    android:scheme="mewtachi" />
             </intent-filter>
         </activity>
     </application>

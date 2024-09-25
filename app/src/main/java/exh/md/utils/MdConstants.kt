@@ -21,8 +21,8 @@ object MdConstants {
     val mdAtHomeTokenLifespan = 5.minutes.inWholeMilliseconds
 
     object Login {
-        const val redirectUri = "tachiyomisy://mangadex-auth"
-        const val clientId = "tachiyomisy"
+        const val redirectUri = "mewtachi://mangadex-auth"
+        const val clientId = "mewtachi"
         const val authorizationCode = "authorization_code"
         const val refreshToken = "refresh_token"
 

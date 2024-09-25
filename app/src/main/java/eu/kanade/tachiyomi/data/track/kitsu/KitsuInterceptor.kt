@@ -35,7 +35,7 @@ class KitsuInterceptor(private val kitsu: Kitsu) : Interceptor {
         // Add the authorization header to the original request.
         val authRequest = originalRequest.newBuilder()
             .addHeader("Authorization", "Bearer ${oauth!!.access_token}")
-            .header("User-Agent", "TachiyomiSY v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
+            .header("User-Agent", "Mewtachi v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
             .header("Accept", "application/vnd.api+json")
             .header("Content-Type", "application/vnd.api+json")
             .build()

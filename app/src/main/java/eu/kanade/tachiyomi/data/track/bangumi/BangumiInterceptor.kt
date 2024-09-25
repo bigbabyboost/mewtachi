@@ -33,7 +33,7 @@ class BangumiInterceptor(private val bangumi: Bangumi) : Interceptor {
         return originalRequest.newBuilder()
             .header(
                 "User-Agent",
-                "jobobby04/TachiyomiSY/v${BuildConfig.VERSION_NAME} (Android) (http://github.com/jobobby04/tachiyomisy)",
+                "bigbabyboost/Mewtachi/v${BuildConfig.VERSION_NAME} (Android) (http://github.com/bigbabyboost/mewtachi)",
             )
             .apply {
                 if (originalRequest.method == "GET") {

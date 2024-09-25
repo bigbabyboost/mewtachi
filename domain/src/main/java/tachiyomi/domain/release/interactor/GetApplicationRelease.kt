@@ -51,12 +51,12 @@ class GetApplicationRelease(
         // Removes prefixes like "r" or "v"
         val newVersion = versionTag.replace("[^\\d.]".toRegex(), "")
         return if (isPreview) {
-            // Preview builds: based on releases in "jobobby04/TachiyomiSYPreview" repo
+            // Preview builds: based on releases in "bigbabyboost/MewtachiPreview" repo
             // tagged as something like "508"
             val currentInt = syDebugVersion.toIntOrNull()
             currentInt != null && newVersion.toInt() > currentInt
         } else {
-            // Release builds: based on releases in "jobobby04/TachiyomiSY" repo
+            // Release builds: based on releases in "bigbabyboost/Mewtachi" repo
             // tagged as something like "0.1.2"
             val oldVersion = versionName.replace("[^\\d.]".toRegex(), "")
 
