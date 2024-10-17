@@ -35,7 +35,7 @@ class ShikimoriInterceptor(private val shikimori: Shikimori) : Interceptor {
         }
         // Add the authorization header to the original request.
         val authRequest = originalRequest.newBuilder()
-            .addHeader("Authorization", "Bearer ${oauth!!.access_token}")
+            .addHeader("Authorization", "Bearer ${oauth!!.accessToken}")
             .header("User-Agent", "Mewtachi v${BuildConfig.VERSION_NAME} (${BuildConfig.APPLICATION_ID})")
             .build()
 
