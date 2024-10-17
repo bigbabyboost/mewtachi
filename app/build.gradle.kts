@@ -6,17 +6,18 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
     id("mihon.android.application")
     id("mihon.android.application.compose")
-    id("com.mikepenz.aboutlibraries.plugin")
     kotlin("plugin.parcelize")
     kotlin("plugin.serialization")
     // id("com.github.zellius.shortcut-helper")
+    alias(libs.plugins.aboutLibraries)
     id("com.github.ben-manes.versions")
 }
 
 if (gradle.startParameter.taskRequests.toString().contains("Standard")) {
-    apply<com.google.gms.googleservices.GoogleServicesPlugin>()
-    // Firebase Crashlytics
-    apply(plugin = "com.google.firebase.crashlytics")
+    pluginManager.apply {
+        apply(libs.plugins.google.services.get().pluginId)
+        apply(libs.plugins.firebase.crashlytics.get().pluginId)
+    }
 }
 
 // shortcutHelper.setFilePath("./shortcuts.xml")
@@ -106,13 +107,16 @@ android {
     packaging {
         resources.excludes.addAll(
             listOf(
+                "kotlin-tooling-metadata.json",
                 "META-INF/DEPENDENCIES",
                 "LICENSE.txt",
                 "META-INF/LICENSE",
-                "META-INF/LICENSE.txt",
+                "META-INF/**/LICENSE.txt",
+                "META-INF/*.properties",
+                "META-INF/**/*.properties",
                 "META-INF/README.md",
                 "META-INF/NOTICE",
-                "META-INF/*.kotlin_module",
+                "META-INF/*.version",
             ),
         )
     }
@@ -161,7 +165,6 @@ dependencies {
     debugImplementation(compose.ui.tooling)
     implementation(compose.ui.tooling.preview)
     implementation(compose.ui.util)
-    implementation(compose.accompanist.systemuicontroller)
 
     implementation(androidx.interpolator)
 
@@ -247,7 +250,9 @@ dependencies {
     implementation(libs.logcat)
 
     // Crash reports/analytics
-    // "standardImplementation"(libs.firebase.analytics)
+//    "standardImplementation"(platform(libs.firebase.bom))
+//    "standardImplementation"(libs.firebase.analytics)
+//    "standardImplementation"(libs.firebase.crashlytics)
 
     // Shizuku
     implementation(libs.bundles.shizuku)
@@ -266,8 +271,9 @@ dependencies {
     implementation(sylibs.simularity)
 
     // Firebase (EH)
-    implementation(sylibs.firebase.analytics)
-    implementation(sylibs.firebase.crashlytics.ktx)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
+    implementation(libs.firebase.crashlytics)
 
     // Better logging (EH)
     implementation(sylibs.xlog)
@@ -279,6 +285,10 @@ dependencies {
     // Google drive
     implementation(sylibs.google.api.services.drive)
     implementation(sylibs.google.api.client.oauth)
+
+    // Koin
+    implementation(sylibs.koin.core)
+    implementation(sylibs.koin.android)
 }
 
 androidComponents {

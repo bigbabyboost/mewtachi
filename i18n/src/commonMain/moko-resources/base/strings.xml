@@ -69,6 +69,7 @@
     <string name="action_sort_chapter_fetch_date">Chapter fetch date</string>
     <string name="action_sort_date_added">Date added</string>
     <string name="action_sort_tracker_score">Tracker score</string>
+    <string name="action_sort_random">Random</string>
     <string name="action_search">Search</string>
     <string name="action_search_hint">Search…</string>
     <string name="action_search_settings">Search settings</string>
@@ -190,6 +191,10 @@
     <string name="onboarding_permission_notifications_description">Get notified for library updates and more.</string>
     <string name="onboarding_permission_ignore_battery_opts">Background battery usage</string>
     <string name="onboarding_permission_ignore_battery_opts_description">Avoid interruptions to long-running library updates, downloads, and backup restores.</string>
+    <string name="onboarding_permission_crashlytics">Send crash logs</string>
+    <string name="onboarding_permission_crashlytics_description">Send anonymized crash logs to the developers.</string>
+    <string name="onboarding_permission_analytics">Allow analytics</string>
+    <string name="onboarding_permission_analytics_description">Send anonymized usage data to improve app features.</string>
     <string name="onboarding_permission_action_grant">Grant</string>
     <string name="onboarding_guides_new_user">New to %s? We recommend checking out the getting started guide.</string>
     <string name="onboarding_guides_returning_user">Reinstalling %s?</string>
@@ -242,6 +247,9 @@
     <string name="pref_app_language">App language</string>
 
     <string name="pref_category_security">Security and privacy</string>
+    <string name="pref_security">Security</string>
+    <string name="pref_firebase">Analytics and Crash logs</string>
+
     <string name="lock_with_biometrics">Require unlock</string>
     <string name="lock_when_idle">Lock when idle</string>
     <string name="lock_always">Always</string>
@@ -249,6 +257,7 @@
     <string name="hide_notification_content">Hide notification content</string>
     <string name="secure_screen">Secure screen</string>
     <string name="secure_screen_summary">Secure screen hides app contents when switching apps and block screenshots</string>
+    <string name="firebase_summary">Sending crash logs and analytics will allow us to identify and fix issues, improve performance, and make future updates more relevant to your needs</string>
 
     <string name="pref_category_nsfw_content">NSFW (18+) sources</string>
     <string name="pref_show_nsfw_source">Show in sources and extensions lists</string>
@@ -317,10 +326,13 @@
     <string name="ext_trust">Trust</string>
     <string name="ext_untrusted">Untrusted</string>
     <string name="ext_uninstall">Uninstall</string>
+    <string name="ext_remove">Remove</string>
+    <string name="ext_confirm_remove">Remove Extension?</string>
     <string name="ext_app_info">App info</string>
     <string name="untrusted_extension">Untrusted extension</string>
     <string name="untrusted_extension_message">Malicious extensions can read any stored login credentials or execute arbitrary code.\n\nBy trusting this extension, you accept these risks.</string>
     <string name="obsolete_extension_message">This extension is no longer available. It may not function properly and can cause issues with the app. Uninstalling it is recommended.</string>
+    <string name="remove_private_extension_message">Do you really want to remove \"%s\" extension?</string>
     <string name="extension_api_error">Failed to fetch available extensions</string>
     <string name="ext_info_version">Version</string>
     <string name="ext_info_language">Language</string>
@@ -532,8 +544,9 @@
     <string name="backup_choice">What do you want to backup?</string>
     <string name="app_settings">App settings</string>
     <string name="source_settings">Source settings</string>
-    <string name="extensionRepo_settings">Extension Repos</string>
+    <string name="extensionRepo_settings">Extension repos</string>
     <string name="private_settings">Include sensitive settings (e.g., tracker login tokens)</string>
+    <string name="non_library_settings">All read entries</string>
     <string name="creating_backup">Creating backup</string>
     <string name="creating_backup_error">Backup failed</string>
     <string name="missing_storage_permission">Storage permissions not granted</string>
@@ -647,7 +660,6 @@
     <!-- missing prompt after Compose rewrite #7901 -->
     <string name="no_more_results">No more results</string>
     <string name="no_results_found">No results found</string>
-    <string name="licensed_manga_chapters_error">Licensed - No chapters to show</string>
     <string name="local_source">Local source</string>
     <string name="other_source">Other</string>
     <string name="last_used_source">Last used</string>
@@ -726,6 +738,7 @@
     <string name="are_you_sure">Are you sure?</string>
     <string name="exclude_scanlators">Exclude scanlators</string>
     <string name="no_scanlators_found">No scanlators found</string>
+    <string name="confirm_tracker_update">Update trackers to chapter %d?</string>
 
     <!-- Tracking Screen -->
     <string name="manga_tracking_tab">Tracking</string>
