@@ -1,9 +1,11 @@
 package exh.md.utils
 
+import android.app.Application
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.service.TrackPreferences
+import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.track.mdlist.MdList
-import eu.kanade.tachiyomi.data.track.myanimelist.OAuth
+import eu.kanade.tachiyomi.data.track.myanimelist.dto.MALOAuth
 import eu.kanade.tachiyomi.network.POST
 import eu.kanade.tachiyomi.source.model.SChapter
 import eu.kanade.tachiyomi.source.model.SManga
@@ -189,7 +191,7 @@ class MdUtil {
             return "$cdnUrl/covers/$dexId/$fileName"
         }
 
-        fun saveOAuth(preferences: TrackPreferences, mdList: MdList, oAuth: OAuth?) {
+        fun saveOAuth(preferences: TrackPreferences, mdList: MdList, oAuth: MALOAuth?) {
             if (oAuth == null) {
                 preferences.trackToken(mdList).delete()
             } else {
@@ -197,9 +199,9 @@ class MdUtil {
             }
         }
 
-        fun loadOAuth(preferences: TrackPreferences, mdList: MdList): OAuth? {
+        fun loadOAuth(preferences: TrackPreferences, mdList: MdList): MALOAuth? {
             return try {
-                jsonParser.decodeFromString<OAuth>(preferences.trackToken(mdList).get())
+                jsonParser.decodeFromString<MALOAuth>(preferences.trackToken(mdList).get())
             } catch (e: Exception) {
                 null
             }
@@ -207,11 +209,11 @@ class MdUtil {
 
         private var codeVerifier: String? = null
 
-        fun refreshTokenRequest(oauth: OAuth): Request {
+        fun refreshTokenRequest(oauth: MALOAuth): Request {
             val formBody = FormBody.Builder()
                 .add("client_id", MdConstants.Login.clientId)
                 .add("grant_type", MdConstants.Login.refreshToken)
-                .add("refresh_token", oauth.refresh_token)
+                .add("refresh_token", oauth.refreshToken)
                 .add("code_verifier", getPkceChallengeCode())
                 .add("redirect_uri", MdConstants.Login.redirectUri)
                 .build()
@@ -220,7 +222,7 @@ class MdUtil {
             // request is called by the interceptor itself so it doesn't reach
             // the part where the token is added automatically.
             val headers = Headers.Builder()
-                .add("Authorization", "Bearer ${oauth.access_token}")
+                .add("Authorization", "Bearer ${oauth.accessToken}")
                 .build()
 
             return POST(MdApi.baseAuthUrl + MdApi.token, body = formBody, headers = headers)
@@ -255,6 +257,16 @@ class MdUtil {
         inline fun <reified T> encodeToBody(body: T): RequestBody {
             return jsonParser.encodeToString(body)
                 .toRequestBody("application/json".toMediaType())
+        }
+
+        fun addAltTitleToDesc(description: String, altTitles: List<String>?): String {
+            return if (altTitles.isNullOrEmpty()) {
+                description
+            } else {
+                val altTitlesDesc = altTitles
+                    .joinToString("\n", "${Injekt.get<Application>().getString(R.string.alt_titles)}:\n") { "• $it" }
+                description + (if (description.isBlank()) "" else "\n\n") + altTitlesDesc
+            }
         }
     }
 }

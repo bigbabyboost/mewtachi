@@ -1,11 +1,14 @@
 package eu.kanade.tachiyomi.ui.manga
 
 import android.content.Context
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.util.fastAny
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.flowWithLifecycle
 import cafe.adriel.voyager.core.model.StateScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.core.preference.asState
@@ -25,6 +28,7 @@ import eu.kanade.domain.manga.model.downloadedFilter
 import eu.kanade.domain.manga.model.toSManga
 import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.domain.track.interactor.AddTracks
+import eu.kanade.domain.track.interactor.TrackChapter
 import eu.kanade.domain.track.model.toDomainTrack
 import eu.kanade.domain.ui.UiPreferences
 import eu.kanade.presentation.manga.DownloadAction
@@ -135,14 +139,16 @@ import uy.kohesive.injekt.injectLazy
 import kotlin.math.floor
 
 class MangaScreenModel(
-    val context: Context,
-    val mangaId: Long,
+    private val context: Context,
+    private val lifecycle: Lifecycle,
+    private val mangaId: Long,
     private val isFromSource: Boolean,
     val smartSearched: Boolean,
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     readerPreferences: ReaderPreferences = Injekt.get(),
     uiPreferences: UiPreferences = Injekt.get(),
     private val trackerManager: TrackerManager = Injekt.get(),
+    private val trackChapter: TrackChapter = Injekt.get(),
     private val downloadManager: DownloadManager = Injekt.get(),
     private val downloadCache: DownloadCache = Injekt.get(),
     private val getMangaAndChapters: GetMangaWithChapters = Injekt.get(),
@@ -313,6 +319,7 @@ class MangaScreenModel(
                 .combine(downloadCache.changes) { state, _ -> state }
                 .combine(downloadManager.queueState) { state, _ -> state }
                 // SY <--
+                .flowWithLifecycle(lifecycle)
                 .collectLatest { (manga, chapters /* SY --> */, flatMetadata, mergedData /* SY <-- */) ->
                     val chapterItems = chapters.toChapterListItems(manga /* SY --> */, mergedData /* SY <-- */)
                     updateSuccessState {
@@ -330,6 +337,7 @@ class MangaScreenModel(
 
         screenModelScope.launchIO {
             getExcludedScanlators.subscribe(mangaId)
+                .flowWithLifecycle(lifecycle)
                 .distinctUntilChanged()
                 .collectLatest { excludedScanlators ->
                     updateSuccessState {
@@ -340,6 +348,7 @@ class MangaScreenModel(
 
         screenModelScope.launchIO {
             getAvailableScanlators.subscribe(mangaId)
+                .flowWithLifecycle(lifecycle)
                 .distinctUntilChanged()
                 // SY -->
                 .combine(
@@ -367,6 +376,14 @@ class MangaScreenModel(
         screenModelScope.launchIO {
             val manga = getMangaAndChapters.awaitManga(mangaId)
             // SY -->
+            val mergedData = getMergedReferencesById.await(mangaId).takeIf { it.isNotEmpty() }?.let { references ->
+                MergedMangaData(
+                    references,
+                    getMergedMangaById.await(mangaId).associateBy { it.id },
+                    references.map { it.mangaSourceId }.distinct()
+                        .map { sourceManager.getOrStub(it) },
+                )
+            }
             val chapters = (
                 if (manga.source ==
                     MERGED_SOURCE_ID
@@ -376,15 +393,7 @@ class MangaScreenModel(
                     getMangaAndChapters.awaitChapters(mangaId, applyScanlatorFilter = true)
                 }
                 )
-                .toChapterListItems(manga, null)
-            val mergedData = getMergedReferencesById.await(mangaId).takeIf { it.isNotEmpty() }?.let { references ->
-                MergedMangaData(
-                    references,
-                    getMergedMangaById.await(mangaId).associateBy { it.id },
-                    references.map { it.mangaSourceId }.distinct()
-                        .map { sourceManager.getOrStub(it) },
-                )
-            }
+                .toChapterListItems(manga, mergedData)
             val meta = getFlatMetadata.await(mangaId)
             // SY <--
 
@@ -938,6 +947,7 @@ class MangaScreenModel(
                     }
                 }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
+                .flowWithLifecycle(lifecycle)
                 .collect {
                     withUIContext {
                         updateDownloadState(it)
@@ -956,6 +966,7 @@ class MangaScreenModel(
                     }
                 }
                 .catch { error -> logcat(LogPriority.ERROR, error) }
+                .flowWithLifecycle(lifecycle)
                 .collect {
                     withUIContext {
                         updateDownloadState(it)
@@ -1246,13 +1257,32 @@ class MangaScreenModel(
      * @param read whether to mark chapters as read or unread.
      */
     fun markChaptersRead(chapters: List<Chapter>, read: Boolean) {
+        toggleAllSelection(false)
         screenModelScope.launchIO {
             setReadStatus.await(
                 read = read,
                 chapters = chapters.toTypedArray(),
             )
+
+            if (!read) return@launchIO
+
+            val tracks = getTracks.await(mangaId)
+            val maxChapterNumber = chapters.maxOf { it.chapterNumber }
+            val shouldPromptTrackingUpdate = tracks.any { track -> maxChapterNumber > track.lastChapterRead }
+
+            if (!shouldPromptTrackingUpdate) return@launchIO
+
+            val result = snackbarHostState.showSnackbar(
+                message = context.stringResource(MR.strings.confirm_tracker_update, maxChapterNumber.toInt()),
+                actionLabel = context.stringResource(MR.strings.action_ok),
+                duration = SnackbarDuration.Short,
+                withDismissAction = true,
+            )
+
+            if (result == SnackbarResult.ActionPerformed) {
+                trackChapter.await(context, mangaId, maxChapterNumber)
+            }
         }
-        toggleAllSelection(false)
     }
 
     /**
@@ -1548,6 +1578,7 @@ class MangaScreenModel(
                 trackingCount to supportedTrackers.isNotEmpty()
                 // SY <--
             }
+                .flowWithLifecycle(lifecycle)
                 .distinctUntilChanged()
                 .collectLatest { (trackingCount, hasLoggedInTrackers) ->
                     updateSuccessState {

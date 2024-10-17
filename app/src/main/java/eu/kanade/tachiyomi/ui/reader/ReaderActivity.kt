@@ -91,6 +91,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import eu.kanade.tachiyomi.ui.webview.WebViewActivity
 import eu.kanade.tachiyomi.util.system.hasDisplayCutout
 import eu.kanade.tachiyomi.util.system.isNightMode
+import eu.kanade.tachiyomi.util.system.openInBrowser
 import eu.kanade.tachiyomi.util.system.toShareIntent
 import eu.kanade.tachiyomi.util.system.toast
 import eu.kanade.tachiyomi.util.view.setComposeContent
@@ -467,6 +468,7 @@ class ReaderActivity : BaseActivity() {
                 // bookmarked = state.bookmarked,
                 // onToggleBookmarked = viewModel::toggleChapterBookmark,
                 onOpenInWebView = ::openChapterInWebView.takeIf { isHttpSource },
+                onOpenInBrowser = ::openChapterInBrowser.takeIf { isHttpSource },
                 onShare = ::shareChapter.takeIf { isHttpSource },
 
                 viewer = state.viewer,
@@ -909,6 +911,12 @@ class ReaderActivity : BaseActivity() {
         assistUrl?.let {
             val intent = WebViewActivity.newIntent(this@ReaderActivity, it, source.id, manga.title)
             startActivity(intent)
+        }
+    }
+
+    private fun openChapterInBrowser() {
+        assistUrl?.let {
+            openInBrowser(it.toUri(), forceDefaultBrowser = false)
         }
     }
 

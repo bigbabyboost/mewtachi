@@ -22,6 +22,7 @@ import eu.kanade.domain.base.BasePreferences
 import eu.kanade.domain.chapter.interactor.SetReadStatus
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.domain.sync.SyncPreferences
 import eu.kanade.presentation.components.SEARCH_DEBOUNCE_MILLIS
 import eu.kanade.presentation.library.components.LibraryToolbarTitle
 import eu.kanade.presentation.manga.DownloadAction
@@ -117,7 +118,7 @@ import tachiyomi.source.local.LocalSource
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.util.Collections
+import kotlin.random.Random
 
 /**
  * Typealias for the library manga, using the category as keys, and list of manga as values.
@@ -151,6 +152,7 @@ class LibraryScreenModel(
     private val searchEngine: SearchEngine = Injekt.get(),
     private val setCustomMangaInfo: SetCustomMangaInfo = Injekt.get(),
     private val getMergedChaptersByMangaId: GetMergedChaptersByMangaId = Injekt.get(),
+    private val syncPreferences: SyncPreferences = Injekt.get(),
     // SY <--
 ) : StateScreenModel<LibraryScreenModel.State>(State()) {
 
@@ -178,25 +180,23 @@ class LibraryScreenModel(
                     ::Pair,
                 ),
                 // SY <--
-            ) { searchQuery, library, tracks, (trackingFiler, _), (groupType, sort) ->
+            ) { searchQuery, library, tracks, (trackingFilter, _), (groupType, sort) ->
                 library
                     // SY -->
                     .applyGrouping(groupType)
                     // SY <--
-                    .applyFilters(tracks, trackingFiler)
+                    .applyFilters(tracks, trackingFilter)
                     .applySort(
-                        tracks, trackingFiler.keys, /* SY --> */sort.takeIf {
+                        tracks, trackingFilter.keys, /* SY --> */sort.takeIf {
                             groupType != LibraryGroup.BY_DEFAULT
                         }, /* SY <-- */
                     )
                     .mapValues { (_, value) ->
                         if (searchQuery != null) {
-                            // Filter query
                             // SY -->
-                            filterLibrary(value, searchQuery, trackingFiler)
+                            filterLibrary(value, searchQuery, trackingFilter)
                             // SY <--
                         } else {
-                            // Don't do anything
                             value
                         }
                     }
@@ -276,15 +276,19 @@ class LibraryScreenModel(
                 }
             }
             .launchIn(screenModelScope)
+        syncPreferences.syncService()
+            .changes()
+            .distinctUntilChanged()
+            .onEach { syncService ->
+                mutableState.update { it.copy(isSyncEnabled = syncService != 0) }
+            }
+            .launchIn(screenModelScope)
         // SY <--
     }
 
-    /**
-     * Applies library filters to the given map of manga.
-     */
     private suspend fun LibraryMap.applyFilters(
         trackMap: Map<Long, List<Track>>,
-        trackingFiler: Map<Long, TriState>,
+        trackingFilter: Map<Long, TriState>,
     ): LibraryMap {
         val prefs = getLibraryItemPreferencesFlow().first()
         val downloadedOnly = prefs.globalFilterDownloaded
@@ -296,10 +300,10 @@ class LibraryScreenModel(
         val filterCompleted = prefs.filterCompleted
         val filterIntervalCustom = prefs.filterIntervalCustom
 
-        val isNotLoggedInAnyTrack = trackingFiler.isEmpty()
+        val isNotLoggedInAnyTrack = trackingFilter.isEmpty()
 
-        val excludedTracks = trackingFiler.mapNotNull { if (it.value == TriState.ENABLED_NOT) it.key else null }
-        val includedTracks = trackingFiler.mapNotNull { if (it.value == TriState.ENABLED_IS) it.key else null }
+        val excludedTracks = trackingFilter.mapNotNull { if (it.value == TriState.ENABLED_NOT) it.key else null }
+        val includedTracks = trackingFilter.mapNotNull { if (it.value == TriState.ENABLED_IS) it.key else null }
         val trackFiltersIsIgnored = includedTracks.isEmpty() && excludedTracks.isEmpty()
 
         // SY -->
@@ -370,14 +374,13 @@ class LibraryScreenModel(
             // SY <--
         }
 
-        return this.mapValues { entry -> entry.value.fastFilter(filterFn) }
+        return mapValues { (_, value) -> value.fastFilter(filterFn) }
     }
 
     /**
      * Applies library sorting to the given map of manga.
      */
     private fun LibraryMap.applySort(
-        // Map<MangaId, List<Track>>
         trackMap: Map<Long, List<Track>>,
         loggedInTrackerIds: Set<Long>,
         /* SY --> */
@@ -416,9 +419,9 @@ class LibraryScreenModel(
             }
         }
 
-        val sortFn: (LibraryItem, LibraryItem) -> Int = { i1, i2 ->
+        fun LibrarySort.comparator(): Comparator<LibraryItem> = Comparator { i1, i2 ->
             // SY -->
-            val sort = groupSort ?: keys.find { it.id == i1.libraryManga.category }!!.sort
+            val sort = groupSort ?: this
             // SY <--
             when (sort.type) {
                 LibrarySort.Type.Alphabetical -> {
@@ -454,6 +457,9 @@ class LibraryScreenModel(
                     val item2Score = trackerScores[i2.libraryManga.id] ?: defaultTrackerScoreSortValue
                     item1Score.compareTo(item2Score)
                 }
+                LibrarySort.Type.Random -> {
+                    error("Why Are We Still Here? Just To Suffer?")
+                }
                 // SY -->
                 LibrarySort.Type.TagList -> {
                     val manga1IndexOfTag = listOfTags.indexOfFirst {
@@ -468,17 +474,18 @@ class LibraryScreenModel(
             }
         }
 
-        return this.mapValues { entry ->
+        return mapValues { (key, value) ->
             // SY -->
-            val isAscending = groupSort?.isAscending ?: keys.find { it.id == entry.key.id }!!.sort.isAscending
-            // SY <--
-            val comparator = if ( /* SY --> */ isAscending /* SY <-- */) {
-                Comparator(sortFn)
-            } else {
-                Collections.reverseOrder(sortFn)
+            val sort = groupSort ?: key.sort
+            if (sort.type == LibrarySort.Type.Random) {
+                return@mapValues value.shuffled(Random(libraryPreferences.randomSortSeed().get()))
             }
+            val comparator = sort.comparator()
+                // SY <--
+                .let { if (/* SY --> */ sort.isAscending /* SY <-- */) it else it.reversed() }
+                .thenComparator(sortAlphabetically)
 
-            entry.value.sortedWith(comparator.thenComparator(sortAlphabetically))
+            value.sortedWith(comparator)
         }
     }
 
@@ -1362,6 +1369,7 @@ class LibraryScreenModel(
         val dialog: Dialog? = null,
         // SY -->
         val showSyncExh: Boolean = false,
+        val isSyncEnabled: Boolean = false,
         val ogCategories: List<Category> = emptyList(),
         val groupType: Int = LibraryGroup.BY_DEFAULT,
         // SY <--
