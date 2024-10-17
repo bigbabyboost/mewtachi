@@ -39,9 +39,7 @@ sqlite-ktx = { module = "androidx.sqlite:sqlite-ktx", version.ref = "sqlite" }
 sqlite-android = "com.github.requery:sqlite-android:3.45.0"
 
 preferencektx = "androidx.preference:preference-ktx:1.2.1"
-
-injekt-core = "uy.kohesive.injekt:injekt-core:1.16.1"
-
+injekt-core = "com.github.null2264:injekt-koin:ee267b2e27"
 coil-bom = { module = "io.coil-kt.coil3:coil-bom", version = "3.0.0-rc01" }
 coil-core = { module = "io.coil-kt.coil3:coil" }
 coil-gif = { module = "io.coil-kt.coil3:coil-gif" }
