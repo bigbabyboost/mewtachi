@@ -65,7 +65,7 @@ Additional features for some extensions, features include custom description, op
 ## Download
 Get the app from our [releases page](https://github.com/bigbabyboost/mewtachi/releases/latest).
 
-If you want to try new features before they get to the stable release, you can download the preview version [here](https://github.com/bigbabyboost/mewtachipreview/releases).
+If you want to try new features before they get to the stable release, you can download the preview version [here](https://github.com/bigbabyboost/mewtachi-preview/releases).
 
 ## Translation
 Feel free to translate the project on [Weblate](https://hosted.weblate.org/projects/mihon/mewtachi/)
