@@ -9,9 +9,8 @@ sqldelight = "2.0.2"
 sqlite = "2.4.0"
 voyager = "1.0.0"
 spotless = "6.25.0"
-ktlint-core = "1.3.1"
-firebase-bom = "33.4.0"
-
+ktlint-core = "1.4.0"
+firebase-bom = "33.5.1"
 [libraries]
 desugar = "com.android.tools:desugar_jdk_libs:2.1.2"
 android-shortcut-gradle = "com.github.zellius:android-shortcut-gradle-plugin:0.1.2"
