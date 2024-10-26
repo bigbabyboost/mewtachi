@@ -1,6 +1,6 @@
 | Preview Builds | Release Builds | Mihon Support Server |
 |-------|----------|----------|
-| [![Preview](https://github.com/bigbabyboost/Mewtachi-Preview/workflows/Remote%20Dispatch%20Build%20App/badge.svg)](https://github.com/bigbabyboost/MewtachiPreview/releases) | [![stable release](https://img.shields.io/github/release/bigbabyboost/mewtachi.svg?maxAge=3600&label=download)](https://github.com/bigbabyboost/mewtachi/releases/latest) | [![Discord](https://img.shields.io/discord/1195734228319617024.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/mihon) |
+| [![Preview](https://github.com/bigbabyboost/Mewtachi-Preview/workflows/Remote%20Dispatch%20Build%20App/badge.svg)](https://github.com/bigbabyboost/Mewtachi-Preview/releases) | [![stable release](https://img.shields.io/github/release/bigbabyboost/mewtachi.svg?maxAge=3600&label=download)](https://github.com/bigbabyboost/mewtachi/releases/latest) | [![Discord](https://img.shields.io/discord/1195734228319617024.svg?label=discord&labelColor=7289da&color=2c2f33&style=flat)](https://discord.gg/mihon) |
 
 
 # ![app icon](./.github/readme-images/app-icon.png)Mewtachi
