@@ -29,7 +29,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@00781cbaaeae51e77ec46bfe1cccf85e98167144
+        uses: gradle/actions/wrapper-validation@0bdd871935719febd78681f197cd39af5b6e16a6
 
       - name: Create Tag
         run: |
