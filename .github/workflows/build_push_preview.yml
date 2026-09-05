@@ -37,7 +37,7 @@ jobs:
           git push origin "preview-${{ github.run_number }}"
 
       - name: Invoke workflow in preview repo
-        uses: benc-uk/workflow-dispatch@e2e5e9a103e331dad343f381a29e654aea3cf8fc # v1.2.4
+        uses: benc-uk/workflow-dispatch@d004979be141727c7a17c28f603e2facc40d0855 # v1.3.3
         with:
           workflow: BuildPreview.yml
           repo: bigbabyboost/mewtachi-preview
